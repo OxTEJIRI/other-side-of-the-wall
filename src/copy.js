@@ -54,6 +54,20 @@ export const COPY = {
     again: 'stare again',
   },
 
+  // Spoken by the browser's built-in voice, opt-in. Plain words, said once.
+  voice: {
+    stare:
+      'This is a guy. He is staring at a wall of candles. He is waiting for the breakout. The candles are not going to do it.',
+    ready: 'There is one button. It flips the wall.',
+    flipping: 'Same letters. Other side. Stonk, spelled backward, is knots.',
+    holding:
+      'Now he holds. A trader moves the token. The token takes three percent. Some of it lands here, as stonk. He does not touch anything.',
+    holdingAside: 'He is offended that this worked.',
+    soldTail: 'The crumbs in the air are gone. The pile stays.',
+    endHeld: 'Payouts depend on other people moving the token. This is a joke, not advice.',
+    endSold: 'This is a joke about a transfer tax, not advice.',
+  },
+
   disclaimer:
     'A joke about a transfer tax. Not yield. Not advice. Payouts depend on other people moving the token.',
 

@@ -1,3 +1,9 @@
+> **Redesign v2 (supersedes the sections below where they conflict).**
+> - Full-viewport stage, not a framed 390x780 phone. Phones stack the scene over the caption and button. At 900px and up the layout splits: caption and button on the left, large scene on the right.
+> - Futuristic chamber: perspective grid floor, corner HUD brackets, glass wall slab with a glow (ice before the flip, lime after), a lime scan beam during the flip. The character stays flat with thick outlines on purpose.
+> - Display type is Unbounded (replaces Silkscreen). Body stays Outfit.
+> - Optional voiceover, off by default, using the browser speech engine (no files, no network). Script lives in `src/copy.js` under `voice`. It never says APY, yield, or guaranteed.
+
 # Design system
 
 Tone: deadpan crypto meme. Not a fintech app, not a kid's cartoon, not pixel-art cosplay of an existing meme coin. Flat shapes, thick outlines, one character, one wall.

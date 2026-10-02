@@ -3,7 +3,7 @@
 // share-card canvas draw the same picture.
 
 import { COPY } from './copy.js'
-import { FLIP_MS, CRUMB_EVERY_MS, AIR_MS, PILE_CAP, timerSeconds } from './game.js'
+import { FLIP_MS, HOLD_MS, CRUMB_EVERY_MS, AIR_MS, PILE_CAP, timerSeconds } from './game.js'
 
 const C = {
   bg: '#0b1020',
@@ -20,7 +20,7 @@ const C = {
   redDark: '#9d2424',
   denim: '#24304d',
 }
-const DISPLAY = 'Silkscreen, ui-monospace, monospace'
+const DISPLAY = 'Unbounded, ui-monospace, monospace'
 const BODY = 'Outfit, system-ui, sans-serif'
 
 // ---------- character: 130 x 210, faces right toward the wall ----------
@@ -175,7 +175,7 @@ const SLOTS = [
 ]
 const traderX = (p) => 372 - 222 * p
 const CRUMB_START = [traderX(0.5) + 14, 34]
-const CRUMB_PEAK = -24
+const CRUMB_PEAK = 8
 
 function crumbPos(age, slot) {
   const [sx, sy] = CRUMB_START
@@ -188,7 +188,7 @@ function crumbPos(age, slot) {
   return [sx + (ex - sx) * (0.45 + 0.55 * k), CRUMB_PEAK + (ey - CRUMB_PEAK) * k]
 }
 
-function soldCaption(sec) {
+export function soldCaption(sec) {
   if (sec < 5) return COPY.caption.soldEarly
   if (sec <= 12) return COPY.caption.soldMid
   return COPY.caption.soldLate
@@ -198,29 +198,38 @@ function soldCaption(sec) {
 
 export function mount(root, game) {
   root.innerHTML = `
-  <main class="stage">
-    <div class="play">
-      <header class="bar">
-        <button class="speaker" type="button" aria-label="sound" aria-pressed="false">
+  <main class="stage" data-state="stare">
+    <i class="hud tl"></i><i class="hud tr"></i><i class="hud bl"></i><i class="hud br"></i>
+    <header class="bar">
+      <div class="tools">
+        <button class="speaker" type="button" aria-label="sound effects" aria-pressed="false">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="off" d="M17 9l5 6M22 9l-5 6"/><path class="on" d="M17 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"/></svg>
         </button>
-        <div class="timer" aria-live="off"></div>
-      </header>
-      <div class="scene-box">
-        <div class="scene">
-          <div class="trader"><i></i><span></span><b class="say">${COPY.skillIssue}</b></div>
-          <div class="wall">
-            <div class="wall-inner">
-              <div class="face front">${mortarSVG()}<div class="ticker">${COPY.tickerBefore}</div>${candlesSVG()}</div>
-              <div class="face back">${mortarSVG()}<div class="ticker">${COPY.tickerAfter}</div>${knotSVG()}</div>
-            </div>
-          </div>
-          <button class="char" type="button" aria-label="sell">
-            <div class="bob">${characterSVG()}</div>
-          </button>
-          <div class="crumbs"></div>
-        </div>
+        <button class="voice" type="button" aria-label="voiceover" aria-pressed="false" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>
+          <span>voiceover</span>
+        </button>
       </div>
+      <div class="timer" aria-live="off"></div>
+    </header>
+    <div class="meter"><i></i></div>
+    <div class="scene-box">
+      <div class="floor" aria-hidden="true"></div>
+      <div class="scene">
+        <div class="trader"><i></i><span></span><b class="say">${COPY.skillIssue}</b></div>
+        <div class="wall">
+          <div class="wall-inner">
+            <div class="face front">${mortarSVG()}<div class="ticker">${COPY.tickerBefore}</div>${candlesSVG()}</div>
+            <div class="face back">${mortarSVG()}<div class="ticker">${COPY.tickerAfter}</div>${knotSVG()}</div>
+          </div>
+        </div>
+        <button class="char" type="button" aria-label="sell">
+          <div class="bob">${characterSVG()}</div>
+        </button>
+        <div class="crumbs"></div>
+      </div>
+    </div>
+    <div class="copy">
       <div class="captions">
         <p class="caption" aria-live="polite"></p>
         <p class="aside"></p>
@@ -228,23 +237,26 @@ export function mount(root, game) {
       <div class="slot">
         <button class="flip" type="button" disabled>${COPY.button.flip}</button>
       </div>
-      <section class="end" hidden>
-        <div class="card">
-          <canvas width="1080" height="1080" role="img"></canvas>
-          <div class="end-actions">
-            <button class="save" type="button">${COPY.button.save}</button>
-            <button class="again" type="button">${COPY.button.again}</button>
-          </div>
-        </div>
-      </section>
     </div>
+    <section class="end" hidden>
+      <div class="card">
+        <canvas width="1080" height="1080" role="img"></canvas>
+        <div class="end-actions">
+          <button class="save" type="button">${COPY.button.save}</button>
+          <button class="again" type="button">${COPY.button.again}</button>
+        </div>
+      </div>
+    </section>
     <footer class="disclaimer">${COPY.disclaimer}</footer>
   </main>`
 
   const $ = (s) => root.querySelector(s)
   const els = {
+    stage: $('.stage'),
     speaker: $('.speaker'),
+    voice: $('.voice'),
     timer: $('.timer'),
+    meter: $('.meter'),
     sceneBox: $('.scene-box'),
     scene: $('.scene'),
     trader: $('.trader'),
@@ -267,7 +279,7 @@ export function mount(root, game) {
   // Fit the 350 x 500 scene into whatever height the stage has left.
   const fit = () => {
     const { clientWidth: w, clientHeight: h } = els.sceneBox
-    const s = Math.min(1, w / SCENE_W, h / SCENE_H)
+    const s = Math.min(w / SCENE_W, h / SCENE_H)
     els.scene.style.setProperty('--s', s.toFixed(4))
   }
   new ResizeObserver(fit).observe(els.sceneBox)
@@ -304,8 +316,15 @@ export function mount(root, game) {
     set('caption', caption, (v) => (els.caption.textContent = v))
     set('aside', aside, (v) => (els.aside.textContent = v))
 
+    set('state', s, (v) => (els.stage.dataset.state = v))
+
     // Timer
-    set('timerOn', s === 'holding' || s === 'sold' || s === 'end', (v) => els.timer.classList.toggle('on', v))
+    const timerOn = s === 'holding' || s === 'sold' || s === 'end'
+    set('timerOn', timerOn, (v) => {
+      els.timer.classList.toggle('on', v)
+      els.meter.classList.toggle('on', v)
+    })
+    set('meter', Math.round((g.holdMs / HOLD_MS) * 400), (v) => els.meter.style.setProperty('--p', v / 400))
     set('timer', COPY.timer(timerSeconds(g)), (v) => (els.timer.textContent = v))
 
     // Button
@@ -338,7 +357,7 @@ export function mount(root, game) {
     set('traderSay', s === 'sold', (v) => els.trader.classList.toggle('talking', v))
     if (showTrader) {
       els.trader.style.transform = `translateX(${traderX(p).toFixed(1)}px)`
-      els.trader.style.opacity = s === 'sold' || p < 0.85 ? 1 : ((1 - p) / 0.15).toFixed(3)
+      els.trader.style.opacity = s === 'sold' ? 1 : Math.min(1, p / 0.12, (1 - p) / 0.15).toFixed(3)
     }
 
     // Crumbs
@@ -429,7 +448,7 @@ export function mount(root, game) {
 
 const fontsReady = Promise.race([
   Promise.all(
-    ['72px Silkscreen', '600 34px Outfit', '600 18px Outfit'].map((f) => document.fonts?.load(f).catch(() => null))
+    ['700 72px Unbounded', '600 34px Outfit', '600 18px Outfit'].map((f) => document.fonts?.load(f).catch(() => null))
   ),
   new Promise((r) => setTimeout(r, 2500)),
 ])
@@ -445,12 +464,38 @@ export async function drawShareCard(canvas, g) {
   ctx.fillRect(0, 0, W, W)
   ctx.textBaseline = 'alphabetic'
 
-  // Headline, shrunk only if Silkscreen runs wide
+  // Chamber: soft glow behind the wall, perspective grid under his feet
+  const glow = ctx.createRadialGradient(800, 720, 30, 800, 720, 520)
+  glow.addColorStop(0, 'rgba(143, 208, 255, 0.16)')
+  glow.addColorStop(1, 'rgba(143, 208, 255, 0)')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, W, W)
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(0, 980, W, 100)
+  ctx.clip()
+  ctx.strokeStyle = 'rgba(143, 208, 255, 0.22)'
+  ctx.lineWidth = 2
+  for (const gy of [980, 992, 1012, 1040, 1076]) {
+    ctx.beginPath()
+    ctx.moveTo(0, gy)
+    ctx.lineTo(W, gy)
+    ctx.stroke()
+  }
+  for (let i = -14; i <= 14; i++) {
+    ctx.beginPath()
+    ctx.moveTo(540 + i * 40, 980)
+    ctx.lineTo(540 + i * 130, 1080)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  // Headline, shrunk only if Unbounded runs wide
   let size = 72
-  ctx.font = `${size}px ${DISPLAY}`
+  ctx.font = `700 ${size}px ${DISPLAY}`
   while (size > 40 && Math.max(...end.lines.map((l) => ctx.measureText(l).width)) > W - 144) {
     size -= 2
-    ctx.font = `${size}px ${DISPLAY}`
+    ctx.font = `700 ${size}px ${DISPLAY}`
   }
   const step = Math.round(size * 1.35)
   end.lines.forEach((line, i) => {
@@ -475,10 +520,14 @@ export async function drawShareCard(canvas, g) {
   ctx.fillStyle = C.mortar
   for (let i = 1; i <= 8; i++) ctx.fillRect(wx, wy + Math.round((wh * i) / 9) - 2, ww, 4)
   ctx.restore()
-  ctx.lineWidth = 6
-  ctx.strokeStyle = C.ink
+  ctx.save()
+  ctx.lineWidth = 4
+  ctx.strokeStyle = C.knots
+  ctx.shadowColor = 'rgba(198, 255, 74, 0.5)'
+  ctx.shadowBlur = 34
   ctx.stroke(wall)
-  ctx.font = `40px ${DISPLAY}`
+  ctx.restore()
+  ctx.font = `700 32px ${DISPLAY}`
   ctx.fillStyle = C.knots
   ctx.textAlign = 'center'
   ctx.fillText(COPY.tickerAfter, wx + ww / 2, wy + 92)
