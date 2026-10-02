@@ -1,0 +1,612 @@
+:root {
+  --page: #070b14;
+  --bg: #0b1020;
+  --bg-2: #12182b;
+  --line: #24304d;
+  --text: #f4f1ea;
+  --muted: #8b93a7;
+  --stonk: #8fd0ff;
+  --knots: #c6ff4a;
+  --yolk: #f0d56a;
+  --red: #e23b3b;
+  --red-dark: #9d2424;
+  --danger: #ff6b6b;
+  --ink: #1a1a1a;
+  --candle: var(--stonk);
+
+  --display: 'Silkscreen', ui-monospace, monospace;
+  --body: 'Outfit', system-ui, sans-serif;
+  --pad: 20px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--body);
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 0 72px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px dashed var(--knots);
+  outline-offset: 4px;
+}
+
+/* ---------- stage ---------- */
+
+.stage {
+  position: relative;
+  width: 390px;
+  height: 780px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--pad);
+  border: 1px solid #1c2740;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #10182e 0%, var(--bg) 42%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.play {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.disclaimer {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0 var(--pad);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 419.98px) {
+  body {
+    display: block;
+    padding: 0;
+  }
+  .stage {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .disclaimer {
+    position: static;
+    padding: 10px 0 0;
+  }
+}
+
+/* ---------- top bar ---------- */
+
+.bar {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+}
+
+.speaker {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.speaker svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.speaker .on,
+.speaker[aria-pressed='true'] .off {
+  display: none;
+}
+
+.speaker[aria-pressed='true'] .on {
+  display: inline;
+}
+
+.timer {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--yolk);
+  color: #11160a;
+  font-size: 12px;
+  font-weight: 700;
+  visibility: hidden;
+}
+
+.timer.on {
+  visibility: visible;
+}
+
+/* ---------- scene: 350 x 500 design px, scaled to fit ---------- */
+
+.scene-box {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  /* Traders enter from off-stage right; clip sideways, not upward. */
+  clip-path: inset(-120px 0 -40px -20px);
+}
+
+.scene {
+  --s: 1;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 350px;
+  height: 500px;
+  transform: translateX(-50%) scale(var(--s));
+  transform-origin: 50% 100%;
+}
+
+.trader {
+  position: absolute;
+  top: 22px;
+  left: 0;
+  z-index: 1;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 5px;
+  border-radius: 999px;
+  background: #1c2438;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.trader.on {
+  display: flex;
+}
+
+.trader i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.trader .say {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  display: none;
+  padding: 3px 8px;
+  border: 1px solid var(--danger);
+  border-radius: 999px;
+  background: #1c2438;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.trader.talking .say {
+  display: block;
+}
+
+/* ---------- wall ---------- */
+
+.wall {
+  position: absolute;
+  left: 182px;
+  top: 40px;
+  width: 168px;
+  height: 460px;
+  z-index: 2;
+  perspective: 1100px;
+}
+
+.wall-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.wall-inner.is-flipping {
+  animation: flip 700ms cubic-bezier(0.6, -0.2, 0.4, 1.2) forwards;
+}
+
+.wall-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+@keyframes flip {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
+  background: #1a2236;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.face.back {
+  transform: rotateY(180deg);
+}
+
+.mortar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  stroke: #2a3654;
+  stroke-width: 2;
+}
+
+.ticker {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  font-family: var(--display);
+  font-size: 20px;
+  text-align: center;
+  color: var(--stonk);
+}
+
+.back .ticker {
+  color: var(--knots);
+}
+
+.candles {
+  position: absolute;
+  left: 0;
+  top: 110px;
+  width: 168px;
+  height: 240px;
+  fill: var(--candle);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.candles line {
+  stroke: var(--candle);
+}
+
+/* One candle blinks once every four seconds. That is the joke. */
+.candles .blink {
+  animation: blink 4s steps(1) infinite;
+}
+
+@keyframes blink {
+  0%,
+  94% {
+    opacity: 1;
+  }
+  95%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+.knot {
+  position: absolute;
+  left: 14px;
+  top: 150px;
+  width: 140px;
+  height: 140px;
+}
+
+/* ---------- character ---------- */
+
+.char {
+  position: absolute;
+  left: -12px;
+  top: calc(294px - 12px);
+  z-index: 3;
+  padding: 12px; /* hit target: the character plus 12px */
+  border: 0;
+  background: none;
+  cursor: default;
+}
+
+.char.sellable {
+  cursor: pointer;
+}
+
+.char.stepped {
+  transform: translateX(-14px);
+  transition: transform 220ms ease-out;
+}
+
+.bob {
+  animation: bob 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-2px);
+  }
+}
+
+.char-svg {
+  display: block;
+  overflow: visible;
+}
+
+.char-svg.shake {
+  animation: shake 120ms linear;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+.pupils {
+  transition: transform 160ms ease-out;
+}
+
+.m-open,
+.m-frown,
+.char[data-mouth='open'] .m-flat,
+.char[data-mouth='frown'] .m-flat {
+  display: none;
+}
+
+.char[data-mouth='open'] .m-open,
+.char[data-mouth='frown'] .m-frown {
+  display: inline;
+}
+
+/* ---------- crumbs ---------- */
+
+.crumbs {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.crumb {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--text);
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.crumb.landed {
+  background: var(--stonk);
+}
+
+/* $STONK is wider than a 22px coin; squeeze it to fit. */
+.crumb.landed span {
+  transform: scaleX(0.55);
+}
+
+/* ---------- captions + button slot ---------- */
+
+.captions {
+  flex: none;
+  height: 74px;
+  padding-top: 10px;
+  text-align: center;
+}
+
+.caption {
+  margin: 0;
+  max-height: 45px;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.aside {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.slot {
+  flex: none;
+  height: 64px;
+  display: grid;
+  place-items: center;
+}
+
+.flip {
+  padding: 14px 18px;
+  border: 3px solid #000;
+  border-radius: 999px;
+  background: var(--knots);
+  color: #11160a;
+  font-family: var(--display);
+  font-size: 13px;
+  box-shadow: 4px 4px 0 #11160a, 0 0 8px var(--knots);
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.flip.in {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 180ms ease-out,
+    transform 180ms ease-out;
+}
+
+.flip.in:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #11160a, 0 0 8px var(--knots);
+  transition: none;
+}
+
+/* ---------- end card ---------- */
+
+.end {
+  position: absolute;
+  inset: calc(-1 * var(--pad));
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: var(--pad);
+  border-radius: 27px;
+  background: rgba(7, 11, 20, 0.8);
+  animation: end-in 240ms ease-out;
+}
+
+.end[hidden] {
+  display: none;
+}
+
+@keyframes end-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.card {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--bg-2);
+}
+
+.card canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+}
+
+.end-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.end-actions button {
+  flex: 1;
+  padding: 12px 10px;
+  border: 2px solid var(--muted);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.end-actions button:active {
+  border-color: var(--text);
+}
+
+@media (max-width: 419.98px) {
+  .end {
+    inset: calc(-1 * var(--pad)) calc(-1 * var(--pad)) 0;
+    border-radius: 0;
+  }
+}
+
+/* ---------- reduced motion: crossfade, no shake ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .wall-inner.is-flipping,
+  .wall-inner.is-flipped,
+  .face.back {
+    animation: none;
+    transform: none;
+  }
+  .face {
+    transition: opacity 100ms linear;
+  }
+  .face.back,
+  .is-flipping .front,
+  .is-flipped .front {
+    opacity: 0;
+  }
+  .is-flipping .back,
+  .is-flipped .back {
+    opacity: 1;
+  }
+  .bob,
+  .char-svg.shake {
+    animation: none;
+  }
+  .char.stepped,
+  .flip.in,
+  .end {
+    transition: none;
+    animation: none;
+  }
+}

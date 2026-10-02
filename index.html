@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="A 25-second meme about flipping the wall and not pressing sell." />
+    <meta name="theme-color" content="#070b14" />
+    <title>Other Side of the Wall</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Silkscreen&display=swap"
+    />
+    <style>
+      /* No-JS fallback only. The real styles load with the script. */
+      body { margin: 0; background: #070b14; color: #f4f1ea; font-family: Outfit, system-ui, sans-serif; }
+      .fallback { max-width: 390px; margin: 40px auto; padding: 20px; }
+      .fallback p:first-child { font: 22px/1.35 Silkscreen, ui-monospace, monospace; }
+      .fallback-sub, .fallback .disclaimer { color: #8b93a7; }
+      .fallback .disclaimer { font-size: 11px; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Shown only if JS fails. main.js replaces this. -->
+      <main class="stage fallback">
+        <p>Same letters.<br />Other side.<br />I did not press sell.</p>
+        <p class="fallback-sub">Hold $KNOTS. $STONK lands. No stake. No claim.</p>
+        <footer class="disclaimer">
+          A joke about a transfer tax. Not yield. Not advice. Payouts depend on other people moving the token.
+        </footer>
+      </main>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
